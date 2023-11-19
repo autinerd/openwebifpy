@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Top-level package for openwebif."""
 
-__author__ = """Finbarr Brady"""
-__email__ = 'fbradyirl@github.io'
-__version__ = '3.2.7'
+__version__ = "4.0.0"
