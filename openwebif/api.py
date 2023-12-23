@@ -36,7 +36,7 @@ from .error import InvalidAuthError
 _LOGGER = logging.getLogger(__name__)
 
 
-def enable_logging():
+def enable_logging() -> None:
     """Set up the logging for home assistant."""
     logging.basicConfig(level=logging.INFO)
 
@@ -45,56 +45,56 @@ def enable_logging():
 class OpenWebIfServiceEvent:
     """Represent a OpenWebIf service event."""
 
-    filename: str = None
-    id: int = None
-    name: str = None
-    serviceref: str = None
-    begin: str = None
-    begin_timestamp: int = None
-    end: str = None
-    end_timestamp: int = None
-    description: str = None
-    fulldescription: str = None
-    station: str = None
+    filename: str | None = None
+    id: int | None = None
+    name: str | None = None
+    serviceref: str | None = None
+    begin: str | None = None
+    begin_timestamp: int | None = None
+    end: str | None = None
+    end_timestamp: int | None = None
+    description: str | None = None
+    fulldescription: str | None = None
+    station: str | None = None
 
 
 @dataclass
 class OpenWebIfStatus:
     """Repesent a OpenWebIf status."""
 
-    volume: int = None
-    muted: bool = None
-    currservice: OpenWebIfServiceEvent = None
-    in_standby: bool = False
-    is_recording: bool = False
-    streaming_list: str = None
-    is_streaming: bool = False
-    status_info: dict = None
-    is_recording_playback: bool = False
+    currservice: OpenWebIfServiceEvent
+    volume: int | None = None
+    muted: bool | None = None
+    in_standby: bool | None = False
+    is_recording: bool | None = False
+    streaming_list: str | None = None
+    is_streaming: bool | None = False
+    status_info: dict | None = None
+    is_recording_playback: bool | None = False
 
 
 class OpenWebIfDevice:
     """Represent a OpenWebIf client device."""
 
-    _session: aiohttp.ClientSession
+    _session: aiohttp.ClientSession | None
     _base: URL
-    status: OpenWebIfStatus = OpenWebIfStatus()
+    status: OpenWebIfStatus = OpenWebIfStatus(currservice=OpenWebIfServiceEvent())
     is_offline: bool = False
     turn_off_to_deep: bool
-    picon_url: str = None
-    source_bouquet: str = None
-    mac_address: str = None
+    picon_url: str | None = None
+    source_bouquet: str | None = None
+    mac_address: str | None = None
 
     # pylint: disable=too-many-arguments, disable=too-many-instance-attributes
     def __init__(
         self,
         host: str,
         port: int = 80,
-        username: str = None,
-        password: str = None,
+        username: str | None = None,
+        password: str | None = None,
         is_https: bool = False,
         turn_off_to_deep: bool = False,
-        source_bouquet: str = None,
+        source_bouquet: str | None = None,
     ):
         """Define an enigma2 device.
 
@@ -124,25 +124,24 @@ class OpenWebIfDevice:
         self.source_bouquet = source_bouquet
         self.status.currservice = OpenWebIfServiceEvent()
 
-        self.sources = None
-        self.source_list = None
+        self.sources: dict[str, Any] | None = None
+        self.source_list: list[str] | None = None
 
-    async def close(self):
+    async def close(self) -> None:
         """Close the connection."""
         if self._session is not None and not self._session.closed:
             await self._session.close()
             self._session = None
 
-    def default_all(self):
+    def default_all(self) -> None:
         """Set all properties to default."""
-        self.status = OpenWebIfStatus()
-        self.status.currservice = OpenWebIfServiceEvent()
+        self.status = OpenWebIfStatus(currservice=OpenWebIfServiceEvent())
 
-    async def get_about(self) -> dict:
+    async def get_about(self) -> dict[str, Any] | None:
         """Get general information."""
         return await self._call_api(PATH_ABOUT)
 
-    async def update(self):
+    async def update(self) -> None:
         """Refresh current state based from <host>/api/statusinfo."""
         self.status.status_info = await self._call_api(PATH_STATUSINFO)
 
@@ -150,21 +149,35 @@ class OpenWebIfDevice:
             self.default_all()
             return
 
-        self.status.currservice.filename = self.status.status_info["currservice_filename"]
+        self.status.currservice.filename = self.status.status_info[
+            "currservice_filename"
+        ]
         self.status.currservice.id = self.status.status_info["currservice_id"]
         self.status.currservice.name = self.status.status_info["currservice_name"]
         if "currservice_serviceref" in self.status.status_info:
-            self.status.currservice.serviceref = self.status.status_info["currservice_serviceref"]
+            self.status.currservice.serviceref = self.status.status_info[
+                "currservice_serviceref"
+            ]
         self.status.currservice.begin = self.status.status_info["currservice_begin"]
         if "currservice_begin_timestamp" in self.status.status_info:
-            self.status.currservice.begin_timestamp = self.status.status_info["currservice_begin_timestamp"]
+            self.status.currservice.begin_timestamp = self.status.status_info[
+                "currservice_begin_timestamp"
+            ]
         self.status.currservice.end = self.status.status_info["currservice_end"]
         if "currservice_end_timestamp" in self.status.status_info:
-            self.status.currservice.end_timestamp = self.status.status_info["currservice_end_timestamp"]
-        self.status.currservice.description = self.status.status_info["currservice_description"]
+            self.status.currservice.end_timestamp = self.status.status_info[
+                "currservice_end_timestamp"
+            ]
+        self.status.currservice.description = self.status.status_info[
+            "currservice_description"
+        ]
         if "currservice_station" in self.status.status_info:
-            self.status.currservice.station = self.status.status_info["currservice_station"]
-        self.status.currservice.fulldescription = self.status.status_info["currservice_fulldescription"]
+            self.status.currservice.station = self.status.status_info[
+                "currservice_station"
+            ]
+        self.status.currservice.fulldescription = self.status.status_info[
+            "currservice_fulldescription"
+        ]
         self.status.in_standby = self.status.status_info["inStandby"] == "true"
         self.status.is_recording = self.status.status_info["isRecording"] == "true"
         self.status.is_streaming = self.status.status_info["isStreaming"] == "true"
@@ -183,14 +196,17 @@ class OpenWebIfDevice:
             self.status.currservice.name = f"🔴 {self.status.currservice.name}"
 
         if not self.status.in_standby:
-            self.picon_url = str(self._base.with_path(await self.get_current_playing_picon_url(
+            url = await self.get_current_playing_picon_url(
                 channel_name=self.status.currservice.station,
                 currservice_serviceref=self.status.currservice.serviceref,
-            )))
+            )
+            self.picon_url = str(self._base.with_path(url)) if url is not None else None
 
-    async def get_volume(self) -> int:
+    async def get_volume(self) -> int | None:
         """Get the current volume."""
-        return (await self._call_api(PATH_VOL))["current"]
+
+        response = await self._call_api(PATH_VOL)
+        return None if response is None else int(response["current"])
 
     async def set_volume(self, new_volume: int) -> bool:
         """Set the volume to the new value.
@@ -198,13 +214,13 @@ class OpenWebIfDevice:
         :param new_volume: int from 0-100
         :return: True if successful, false if there was a problem
         """
-        return self._check_reponse_result(
+        return self._check_response_result(
             await self._call_api(PATH_VOL, {"set": "set" + str(new_volume)})
         )
 
     async def send_message(
         self, text: str, message_type: MessageType = MessageType.INFO, timeout: int = -1
-    ):
+    ) -> bool:
         """Send a message to the TV screen.
 
         :param text: The message to display
@@ -212,25 +228,30 @@ class OpenWebIfDevice:
         :return: True if successful, false if there was a problem
         """
 
-        return self._check_reponse_result(
-            self._call_api(
+        return self._check_response_result(
+            await self._call_api(
                 PATH_MESSAGE,
                 {"timeout": timeout, "type": message_type.value, "text": text},
             )
         )
 
-    async def turn_on(self):
+    async def turn_on(self) -> bool:
         """Take the box out of standby."""
 
         if self.is_offline:
             _LOGGER.debug("Box is offline, going to try wake on lan")
-            self.wake_up()
+            # self.wake_up()
 
-        return self._check_reponse_result(
+        return self._check_response_result(
             await self._call_api(PATH_POWERSTATE, {"newstate": PowerState.WAKEUP})
         )
 
-    def get_screen_grab_url(self, mode: ScreenGrabMode = ScreenGrabMode.ALL, format: ScreenGrabFormat = ScreenGrabFormat.JPG, r: int = 0) -> URL:
+    def get_screen_grab_url(
+        self,
+        mode: ScreenGrabMode = ScreenGrabMode.ALL,
+        format: ScreenGrabFormat = ScreenGrabFormat.JPG,
+        r: int = 0,
+    ) -> URL:
         """Get the URL for a screen grab.
 
         :param mode: The screen grab mode
@@ -238,55 +259,58 @@ class OpenWebIfDevice:
         :param r: The resolution to grab (0 = native resolution)
         :return: The URL for the screen grab
         """
-        return self._base.with_path(PATH_GRAB).with_query({"mode": mode.value, "format": format.value, "t": int(time()), "r": r})
+        return self._base.with_path(PATH_GRAB).with_query(
+            {"mode": mode.value, "format": format.value, "t": int(time()), "r": r}
+        )
 
-    async def turn_off(self):
+    async def turn_off(self) -> bool:
         """Put the box out into standby."""
         if self.turn_off_to_deep:
-            return self.deep_standby()
+            return await self.deep_standby()
 
-        return self._check_reponse_result(
+        return self._check_response_result(
             await self._call_api(PATH_POWERSTATE, {"newstate": PowerState.STANDBY})
         )
 
-    async def deep_standby(self):
+    async def deep_standby(self) -> bool:
         """Go into deep standby."""
 
-        return self._check_reponse_result(
+        return self._check_response_result(
             await self._call_api(PATH_POWERSTATE, {"newstate": PowerState.DEEP_STANDBY})
         )
 
-    async def send_remote_control_action(self, action: RemoteControlCodes):
+    async def send_remote_control_action(self, action: RemoteControlCodes) -> bool:
         """Send a remote control command."""
 
-        return self._check_reponse_result(
+        return self._check_response_result(
             await self._call_api(PATH_REMOTECONTROL, {"command": action.value})
         )
 
     async def toggle_mute(self) -> bool:
         """Send mute command."""
-        return (await self._call_api(PATH_VOL, {"set": "mute"}))["isMute"]
+        response = await self._call_api(PATH_VOL, {"set": "mute"})
+        return False if response is None else bool(response["isMute"])
 
     @staticmethod
-    def _check_reponse_result(response: dict) -> bool:
+    def _check_response_result(response: dict[str, Any] | None) -> bool:
         """Check the result of the response.
 
         :param response:
         :return: Returns True if command success, else, False
         """
-        return response["result"]
+        return False if response is None else bool(response["result"])
 
     def is_currently_recording_playback(self) -> bool:
         """Return true if playing back recording."""
         return self.get_current_playback_type() == PlaybackType.recording
 
-    def get_current_playback_type(self) -> PlaybackType:
+    def get_current_playback_type(self) -> PlaybackType | None:
         """Get the currservice_serviceref playing media type.
 
         :return: PlaybackType.live or PlaybackType.recording
         """
 
-        if self.status.currservice.serviceref:
+        if self.status.currservice and self.status.currservice.serviceref:
             if self.status.currservice.serviceref.startswith("1:0:0"):
                 # This is a recording, not a live channel
                 return PlaybackType.recording
@@ -295,8 +319,8 @@ class OpenWebIfDevice:
         return None
 
     async def get_current_playing_picon_url(
-        self, channel_name=None, currservice_serviceref=None
-    ):
+        self, channel_name: str | None = None, currservice_serviceref: str | None = None
+    ) -> str | None:
         """Return the URL to the picon image for the currently playing channel.
 
         :param channel_name: If specified, it will base url on this channel
@@ -304,24 +328,16 @@ class OpenWebIfDevice:
         :param currservice_serviceref: The service_ref for the current service
         :return: The URL, or None if not available
         """
-        cached_info = None
-        if channel_name is None:
-            cached_info = self.status_info
-            if "currservice_station" in cached_info:
-                channel_name = cached_info["currservice_station"]
-            else:
-                _LOGGER.debug("No channel currently playing")
-                return None
 
-        if currservice_serviceref is None:
-            if cached_info is None:
-                cached_info = self.status.status_info
-            currservice_serviceref = self.status.currservice.serviceref
+        if channel_name is None:
+            channel_name = self.status.currservice.station
+
+        currservice_serviceref = str(self.status.currservice.serviceref)
 
         if self.status.is_recording_playback:
             channel_name = self.get_channel_name_from_serviceref()
 
-        url = f"/picon/{self.get_picon_name(channel_name)}.png"
+        url = f"/picon/{self.get_picon_name(str(channel_name))}.png"
         _LOGGER.debug("trying picon url (by channel name): %s", url)
         if await self.url_exists(url):
             return url
@@ -344,21 +360,26 @@ class OpenWebIfDevice:
         # See https://github.com/fbradyirl/openwebifpy/issues/14
         return None
 
-    def get_channel_name_from_serviceref(self) -> str:
+    def get_channel_name_from_serviceref(self) -> str | None:
         """Try to get the channel name from the recording file name."""
         try:
+            if self.status.currservice.serviceref is None:
+                return None
             return self.status.currservice.serviceref.split("-")[1].strip()
         # pylint: disable=broad-except
         except Exception:
             _LOGGER.debug("cannot determine channel name from recording")
         return self.status.currservice.serviceref
 
-    async def url_exists(self, url):
+    async def url_exists(self, url: str) -> bool:
         """Check if a given URL responds to a HEAD request.
 
         :param url: url to test
         :return: True or False
         """
+
+        if self._session is None:
+            self._session = aiohttp.ClientSession(self._base)
 
         request = await self._session.head(url)
         if request.status == 200:
@@ -368,7 +389,7 @@ class OpenWebIfDevice:
         return False
 
     @staticmethod
-    def get_picon_name(channel_name):
+    def get_picon_name(channel_name: str) -> str:
         """Get the name as format is outlined here.
 
         https://github.com/openatv/enigma2/blob/master/lib/python/Components/Renderer/Picon.py
@@ -392,12 +413,13 @@ class OpenWebIfDevice:
             .lower(),
         )
 
-    async def get_version(self):
+    async def get_version(self) -> str | None:
         """Return the Openwebif version."""
 
-        return (await self.get_about())["info"]["webifver"]
+        about = (await self.get_about())
+        return str(about["info"]["webifver"]) if about is not None else None
 
-    async def get_bouquet_sources(self, bouquet: str = None) -> dict:
+    async def get_bouquet_sources(self, bouquet: str | None = None) -> dict[str, Any]:
         """Get a dict of source names and sources in the bouquet.
 
         If bouquet is None, the first bouquet will be read from.
@@ -405,17 +427,19 @@ class OpenWebIfDevice:
         :param bouquet: The bouquet
         :return: a dict
         """
-        sources = {}
+        sources: dict[str, Any] = {}
 
         if not bouquet:
             # load first bouquet
             all_bouquets = await self.get_all_bouquets()
             if not all_bouquets:
-                _LOGGER.debug("%s get_all_bouquets: No bouquets were found.", self._base)
+                _LOGGER.debug(
+                    "%s get_all_bouquets: No bouquets were found.", self._base
+                )
                 return sources
 
             if "bouquets" in all_bouquets:
-                bouquet = all_bouquets["bouquets"][0][0]
+                bouquet = str(all_bouquets["bouquets"][0][0])
                 first_bouquet_name = all_bouquets["bouquets"][0][1]
                 _LOGGER.debug(
                     "%s First bouquet name is: '%s'", self._base, first_bouquet_name
@@ -432,11 +456,11 @@ class OpenWebIfDevice:
             _LOGGER.warning("No sources could be loaded from specified bouquet.")
         return sources
 
-    async def get_all_services(self) -> dict:
+    async def get_all_services(self) -> dict[str, Any] | None:
         """Get list of all services."""
         return await self._call_api(PATH_GETALLSERVICES)
 
-    async def get_all_bouquets(self):
+    async def get_all_bouquets(self) -> dict[str, Any] | None:
         """Get list of all bouquets."""
         return await self._call_api(PATH_BOUQUETS)
 
@@ -446,14 +470,16 @@ class OpenWebIfDevice:
         :param source: the sRef of the channel.
         """
 
-        return self._check_reponse_result(
+        return self._check_response_result(
             await self._call_api(PATH_ZAP, {"sRef": source})
         )
 
     async def _call_api(
-        self, path: str, params: Optional[Mapping[str, str]] = None
-    ) -> Any:
+        self, path: str, params: Optional[Mapping[str, str | int | bool]] = None
+    ) -> dict[str, Any] | None:
         """Perform one api request operation."""
+        if self._session is None:
+            self._session = aiohttp.ClientSession(self._base)
         async with self._session.get(path, params=params) as response:
             _LOGGER.debug("Got %d from: %s", response.status, response.request_info.url)
             if response.status == 401:
@@ -469,4 +495,4 @@ class OpenWebIfDevice:
                     _LOGGER.warning("%s is unreachable.", response.request_info.url)
                     self.is_offline = True
                     return None
-            return await response.json(content_type=None)
+            return dict(await response.json(content_type=None))
