@@ -180,7 +180,10 @@ class OpenWebIfDevice:
         ]
         self.status.in_standby = self.status.status_info["inStandby"] == "true"
         self.status.is_recording = self.status.status_info["isRecording"] == "true"
-        self.status.is_streaming = self.status.status_info["isStreaming"] == "true"
+        if "isStreaming" in self.status.status_info:
+            self.status.is_streaming = self.status.status_info["isStreaming"] == "true"
+        else:
+            self.status.is_streaming = None
         self.status.muted = self.status.status_info["muted"]
         self.status.volume = self.status.status_info["volume"]
 
