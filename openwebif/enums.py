@@ -1,6 +1,6 @@
 """Enums in regard to OpenWebIf."""
 
-from enum import Enum, IntEnum
+from enum import IntEnum, StrEnum
 
 
 class PlaybackType(IntEnum):
@@ -41,7 +41,7 @@ class RemoteControlCodes(IntEnum):
     PAUSE = 119
 
 
-class ScreenGrabMode(Enum):
+class ScreenGrabMode(StrEnum):
     """Enum for screen grab modes."""
 
     ALL = "all"
@@ -51,9 +51,16 @@ class ScreenGrabMode(Enum):
     LCD = "lcd"
 
 
-class ScreenGrabFormat(Enum):
+class ScreenGrabFormat(StrEnum):
     """Enum for screen grab formats."""
 
     JPG = "jpg"
     PNG = "png"
     BMP = "bmp"
+
+class SetVolumeOption(StrEnum):
+    """Enum for volume options."""
+
+    UP = "up"
+    DOWN = "down"
+    MUTE = "mute"

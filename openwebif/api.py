@@ -30,6 +30,7 @@ from .enums import (
     RemoteControlCodes,
     ScreenGrabFormat,
     ScreenGrabMode,
+    SetVolumeOption,
 )
 from .error import InvalidAuthError
 
@@ -212,14 +213,14 @@ class OpenWebIfDevice:
         response = await self._call_api(PATH_VOL)
         return None if response is None else int(response["current"])
 
-    async def set_volume(self, new_volume: int) -> bool:
+    async def set_volume(self, new_volume: int | SetVolumeOption) -> bool:
         """Set the volume to the new value.
 
         :param new_volume: int from 0-100
         :return: True if successful, false if there was a problem
         """
         return self._check_response_result(
-            await self._call_api(PATH_VOL, {"set": "set" + str(new_volume)})
+            await self._call_api(PATH_VOL, {"set": ("set" + str(new_volume)) if isinstance(new_volume, int) else str(new_volume)})
         )
 
     async def send_message(
@@ -292,8 +293,8 @@ class OpenWebIfDevice:
 
     async def toggle_mute(self) -> bool:
         """Send mute command."""
-        response = await self._call_api(PATH_VOL, {"set": "mute"})
-        return False if response is None else bool(response["isMute"])
+        response = await self._call_api(PATH_VOL, {"set": SetVolumeOption.MUTE})
+        return False if response is None else bool(response["ismute"])
 
     @staticmethod
     def _check_response_result(response: dict[str, Any] | None) -> bool:
