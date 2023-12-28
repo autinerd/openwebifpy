@@ -88,7 +88,7 @@ class OpenWebIfDevice:
     # pylint: disable=too-many-arguments, disable=too-many-instance-attributes
     def __init__(
         self,
-        host: str,
+        host: str | aiohttp.ClientSession,
         port: int = 80,
         username: str | None = None,
         password: str | None = None,
@@ -98,7 +98,7 @@ class OpenWebIfDevice:
     ):
         """Define an enigma2 device.
 
-        :param host: IP or hostname
+        :param host: IP or hostname or a ClientSession
         :param port: OpenWebif port
         :param username: e2 user
         :param password: e2 user password
@@ -108,18 +108,19 @@ class OpenWebIfDevice:
         """
         enable_logging()
 
-        _LOGGER.debug("Initialising new openwebif client for host: %s", host)
-        _LOGGER.debug("%s Using a single session client.", host)
-
-        self._base = URL.build(
-            scheme="http" if not is_https else "https",
-            host=host,
-            port=port,
-            user=username,
-            password=password,
-        )
-
-        self._session = aiohttp.ClientSession(self._base)
+        if isinstance(host, str):
+            _LOGGER.debug("Initialising new openwebif client for host: %s", host)
+            _LOGGER.debug("%s Using a single session client.", host)
+            self._base = URL.build(
+                scheme="http" if not is_https else "https",
+                host=host,
+                port=port,
+                user=username,
+                password=password,
+            )
+            self._session = aiohttp.ClientSession(self._base)
+        elif isinstance(host, aiohttp.ClientSession):
+            self._session = host
         self.turn_off_to_deep = turn_off_to_deep
         self.source_bouquet = source_bouquet
         self.status.currservice = OpenWebIfServiceEvent()
