@@ -154,32 +154,38 @@ class OpenWebIfDevice:
         self.status.currservice.filename = self.status.status_info[
             "currservice_filename"
         ]
-        self.status.currservice.id = self.status.status_info["currservice_id"]
-        self.status.currservice.name = self.status.status_info["currservice_name"]
+        if "currservice_id" in self.status.status_info:
+            self.status.currservice.id = self.status.status_info["currservice_id"]
+        if "currservice_name" in self.status.status_info:
+            self.status.currservice.name = self.status.status_info["currservice_name"]
         if "currservice_serviceref" in self.status.status_info:
             self.status.currservice.serviceref = self.status.status_info[
                 "currservice_serviceref"
             ]
-        self.status.currservice.begin = self.status.status_info["currservice_begin"]
+        if "currservice_begin" in self.status.status_info:
+            self.status.currservice.begin = self.status.status_info["currservice_begin"]
         if "currservice_begin_timestamp" in self.status.status_info:
             self.status.currservice.begin_timestamp = self.status.status_info[
                 "currservice_begin_timestamp"
             ]
-        self.status.currservice.end = self.status.status_info["currservice_end"]
+        if "currservice_end" in self.status.status_info:
+            self.status.currservice.end = self.status.status_info["currservice_end"]
         if "currservice_end_timestamp" in self.status.status_info:
             self.status.currservice.end_timestamp = self.status.status_info[
                 "currservice_end_timestamp"
             ]
-        self.status.currservice.description = self.status.status_info[
-            "currservice_description"
-        ]
+        if "currservice_description" in self.status.status_info:
+            self.status.currservice.description = self.status.status_info[
+                "currservice_description"
+            ]
         if "currservice_station" in self.status.status_info:
             self.status.currservice.station = self.status.status_info[
                 "currservice_station"
             ]
-        self.status.currservice.fulldescription = self.status.status_info[
-            "currservice_fulldescription"
-        ]
+        if "currservice_fulldescription" in self.status.status_info:
+            self.status.currservice.fulldescription = self.status.status_info[
+                "currservice_fulldescription"
+            ]
         self.status.in_standby = self.status.status_info["inStandby"] == "true"
         self.status.is_recording = self.status.status_info["isRecording"] == "true"
         if "isStreaming" in self.status.status_info:
@@ -220,7 +226,14 @@ class OpenWebIfDevice:
         :return: True if successful, false if there was a problem
         """
         return self._check_response_result(
-            await self._call_api(PATH_VOL, {"set": ("set" + str(new_volume)) if isinstance(new_volume, int) else str(new_volume)})
+            await self._call_api(
+                PATH_VOL,
+                {
+                    "set": ("set" + str(new_volume))
+                    if isinstance(new_volume, int)
+                    else str(new_volume)
+                },
+            )
         )
 
     async def send_message(
@@ -421,7 +434,7 @@ class OpenWebIfDevice:
     async def get_version(self) -> str | None:
         """Return the Openwebif version."""
 
-        about = (await self.get_about())
+        about = await self.get_about()
         return str(about["info"]["webifver"]) if about is not None else None
 
     async def get_bouquet_sources(self, bouquet: str | None = None) -> dict[str, Any]:

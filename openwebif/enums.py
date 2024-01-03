@@ -58,6 +58,7 @@ class ScreenGrabFormat(StrEnum):
     PNG = "png"
     BMP = "bmp"
 
+
 class SetVolumeOption(StrEnum):
     """Enum for volume options."""
 

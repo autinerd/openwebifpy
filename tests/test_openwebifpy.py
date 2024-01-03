@@ -11,6 +11,7 @@ def test_create() -> None:
     with pytest.raises(TypeError):
         openwebif.api.OpenWebIfDevice()
 
+
 def test_get_picon_name() -> None:
     """Tests whether the Picon name conversion works."""
     assert openwebif.api.OpenWebIfDevice.get_picon_name("RTÉ One") == "rteone"
