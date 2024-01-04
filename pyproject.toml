@@ -23,7 +23,7 @@ classifiers = [
 license = {file = "LICENSE"}
 keywords=['openwebif']
 
-dependencies = ["aiohttp"]
+dependencies = ["aiohttp", "yarl"]
 dynamic = ["version"]
 
 [project.urls]
