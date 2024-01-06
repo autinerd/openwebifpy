@@ -143,6 +143,10 @@ class OpenWebIfDevice:
         """Get general information."""
         return await self._call_api(PATH_ABOUT)
 
+    async def get_status_info(self) -> dict[str, Any] | None:
+        """Get status info."""
+        return await self._call_api(PATH_STATUSINFO)
+
     async def update(self) -> None:
         """Refresh current state based from <host>/api/statusinfo."""
         self.status.status_info = await self._call_api(PATH_STATUSINFO)
