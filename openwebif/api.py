@@ -8,6 +8,7 @@ from time import time
 from typing import Any, Mapping, Optional
 
 import aiohttp
+from typing_extensions import deprecated
 from yarl import URL
 
 from .constants import (
@@ -43,6 +44,7 @@ def enable_logging() -> None:
 
 
 @dataclass
+@deprecated("Deprecated, please use the OpenWebIfDevice.status_info dict")
 class OpenWebIfServiceEvent:
     """Represent a OpenWebIf service event."""
 
@@ -60,6 +62,7 @@ class OpenWebIfServiceEvent:
 
 
 @dataclass
+@deprecated("Deprecated, please use the OpenWebIfDevice.status_info dict")
 class OpenWebIfStatus:
     """Repesent a OpenWebIf status."""
 
@@ -85,6 +88,7 @@ class OpenWebIfDevice:
     picon_url: str | None = None
     source_bouquet: str | None = None
     mac_address: str | None = None
+    status_info: dict[str, Any] | None = None
 
     # pylint: disable=too-many-arguments, disable=too-many-instance-attributes
     def __init__(
@@ -149,7 +153,8 @@ class OpenWebIfDevice:
 
     async def update(self) -> None:
         """Refresh current state based from <host>/api/statusinfo."""
-        self.status.status_info = await self._call_api(PATH_STATUSINFO)
+        self.status_info = await self._call_api(PATH_STATUSINFO)
+        self.status.status_info = self.status_info
 
         if self.is_offline or not self.status.status_info:
             self.default_all()
