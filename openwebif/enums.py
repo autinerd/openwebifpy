@@ -6,9 +6,9 @@ from enum import IntEnum, StrEnum
 class PlaybackType(IntEnum):
     """Enum for playback type."""
 
-    live = 1
-    recording = 2
-    none = 3
+    LIVE = 1
+    RECORDING = 2
+    NONE = 3
 
 
 class MessageType(IntEnum):
