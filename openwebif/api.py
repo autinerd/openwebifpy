@@ -5,7 +5,7 @@ import unicodedata
 from dataclasses import dataclass
 from re import sub
 from time import time
-from typing import Any, Mapping
+from typing import Any, Mapping, cast
 
 import aiohttp
 from yarl import URL
@@ -42,6 +42,7 @@ def enable_logging() -> None:
     logging.basicConfig(level=logging.INFO)
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class OpenWebIfServiceEvent:
     """Represent a OpenWebIf service event."""
@@ -59,6 +60,7 @@ class OpenWebIfServiceEvent:
     station: str | None = None
 
 
+# pylint: disable=too-many-instance-attributes
 @dataclass
 class OpenWebIfStatus:
     """Repesent a OpenWebIf status."""
@@ -74,6 +76,7 @@ class OpenWebIfStatus:
     is_recording_playback: bool | None = False
 
 
+# pylint: disable=too-many-instance-attributes, disable=too-many-public-methods
 class OpenWebIfDevice:
     """Represent a OpenWebIf client device."""
 
@@ -122,6 +125,7 @@ class OpenWebIfDevice:
             )
             self._session = aiohttp.ClientSession(self.base)
         elif isinstance(host, aiohttp.ClientSession):
+            self.base = cast(URL, host._base_url)
             self._session = host
         self.turn_off_to_deep = turn_off_to_deep
         self.source_bouquet = source_bouquet
@@ -273,7 +277,12 @@ class OpenWebIfDevice:
         :return: The URL for the screen grab
         """
         return self.base.with_path(PATH_GRAB).with_query(
-            {"mode": mode.value, "format": file_format.value, "t": int(time()), "r": resolution}
+            {
+                "mode": mode.value,
+                "format": file_format.value,
+                "t": int(time()),
+                "r": resolution,
+            }
         )
 
     async def turn_off(self) -> bool:
@@ -446,9 +455,7 @@ class OpenWebIfDevice:
             # load first bouquet
             all_bouquets = await self.get_all_bouquets()
             if not all_bouquets:
-                _LOGGER.debug(
-                    "%s get_all_bouquets: No bouquets were found.", self.base
-                )
+                _LOGGER.debug("%s get_all_bouquets: No bouquets were found.", self.base)
                 return sources
 
             if "bouquets" in all_bouquets:

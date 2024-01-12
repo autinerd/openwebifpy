@@ -1,5 +1,4 @@
 """Tests the api."""
-# pylint: disable=protected-access
 import pytest
 
 import openwebif.api
@@ -9,7 +8,7 @@ def test_create() -> None:
     """Test creating a new device."""
     # Bogus config
     with pytest.raises(TypeError):
-        openwebif.api.OpenWebIfDevice()
+        openwebif.api.OpenWebIfDevice()  # type: ignore[call-arg]
 
 
 def test_get_picon_name() -> None:
