@@ -87,7 +87,7 @@ class OpenWebIfDevice:
     turn_off_to_deep: bool
     picon_url: str | None = None
     source_bouquet: str | None = None
-    mac_address: str | None = None
+    mac_address: str
     sources: dict[str, Any]
     source_list: list[str]
 
@@ -130,6 +130,7 @@ class OpenWebIfDevice:
         self.turn_off_to_deep = turn_off_to_deep
         self.source_bouquet = source_bouquet
         self.status = OpenWebIfStatus(currservice=OpenWebIfServiceEvent())
+        self.sources = {}
 
     async def close(self) -> None:
         """Close the connection."""
@@ -480,11 +481,11 @@ class OpenWebIfDevice:
             _LOGGER.warning("No sources could be loaded from specified bouquet.")
         return sources
 
-    async def get_all_services(self) -> dict[str, Any] | None:
+    async def get_all_services(self) -> dict[str, Any]:
         """Get list of all services."""
         return await self._call_api(PATH_GETALLSERVICES)
 
-    async def get_all_bouquets(self) -> dict[str, Any] | None:
+    async def get_all_bouquets(self) -> dict[str, Any]:
         """Get list of all bouquets."""
         return await self._call_api(PATH_BOUQUETS)
 
