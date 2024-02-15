@@ -88,8 +88,8 @@ class OpenWebIfDevice:
     picon_url: str | None = None
     source_bouquet: str | None = None
     mac_address: str | None = None
-    sources: dict[str, Any] | None = None
-    source_list: list[str] | None = None
+    sources: dict[str, Any]
+    source_list: list[str]
 
     # pylint: disable=too-many-arguments, disable=too-many-instance-attributes
     def __init__(
@@ -141,11 +141,11 @@ class OpenWebIfDevice:
         """Set all properties to default."""
         self.status = OpenWebIfStatus(currservice=OpenWebIfServiceEvent())
 
-    async def get_about(self) -> dict[str, Any] | None:
+    async def get_about(self) -> dict[str, Any]:
         """Get general information."""
         return await self._call_api(PATH_ABOUT)
 
-    async def get_status_info(self) -> dict[str, Any] | None:
+    async def get_status_info(self) -> dict[str, Any]:
         """Get status info."""
         return await self._call_api(PATH_STATUSINFO)
 
@@ -212,11 +212,10 @@ class OpenWebIfDevice:
             )
             self.picon_url = str(self.base.with_path(url)) if url is not None else None
 
-    async def get_volume(self) -> int | None:
+    async def get_volume(self) -> int:
         """Get the current volume."""
 
-        response = await self._call_api(PATH_VOL)
-        return None if response is None else int(response["current"])
+        return int((await self._call_api(PATH_VOL))["current"])
 
     async def set_volume(self, new_volume: int | SetVolumeOption) -> bool:
         """Set the volume to the new value.
@@ -440,7 +439,7 @@ class OpenWebIfDevice:
             .lower(),
         )
 
-    async def get_version(self) -> str | None:
+    async def get_version(self) -> str:
         """Return the Openwebif version."""
 
         about = await self.get_about()
@@ -501,7 +500,7 @@ class OpenWebIfDevice:
 
     async def _call_api(
         self, path: str, params: Mapping[str, str | int | bool] | None = None
-    ) -> dict[str, Any] | None:
+    ) -> dict[str, Any]:
         """Perform one api request operation."""
         if self._session is None:
             self._session = aiohttp.ClientSession(self.base)
@@ -516,8 +515,5 @@ class OpenWebIfDevice:
                     response.request_info.url,
                     await response.text(),
                 )
-                if not self.is_offline:
-                    _LOGGER.warning("%s is unreachable.", response.request_info.url)
-                    self.is_offline = True
-                    return None
+                raise ConnectionError
             return dict(await response.json(content_type=None))
