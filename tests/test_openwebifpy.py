@@ -1,4 +1,5 @@
 """Tests the api."""
+
 import pytest
 
 import openwebif.api

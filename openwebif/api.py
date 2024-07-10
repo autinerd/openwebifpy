@@ -306,7 +306,9 @@ class OpenWebIfDevice:
     async def set_powerstate(self, newstate: PowerState) -> bool:
         """Set a new power state."""
 
-        return self._check_response_result(await self._call_api(PATH_POWERSTATE, {"newstate": newstate.value}))
+        return self._check_response_result(
+            await self._call_api(PATH_POWERSTATE, {"newstate": newstate.value})
+        )
 
     async def send_remote_control_action(self, action: RemoteControlCodes) -> bool:
         """Send a remote control command."""
