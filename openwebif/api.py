@@ -5,7 +5,7 @@ import unicodedata
 from dataclasses import dataclass
 from re import sub
 from time import time
-from typing import Any, Mapping, cast
+from typing import Any, Mapping, OrderedDict, cast
 
 import aiohttp
 from yarl import URL
@@ -90,6 +90,7 @@ class OpenWebIfDevice:
     mac_address: str
     sources: dict[str, Any]
     source_list: list[str]
+    bouquet_list: OrderedDict[str, str]  # {bouquetname: bouquetref}
 
     # pylint: disable=too-many-arguments, disable=too-many-instance-attributes
     def __init__(
@@ -131,6 +132,7 @@ class OpenWebIfDevice:
         self.source_bouquet = source_bouquet
         self.status = OpenWebIfStatus(currservice=OpenWebIfServiceEvent())
         self.sources = {}
+        self.bouquet_list = OrderedDict()
 
     async def close(self) -> None:
         """Close the connection."""
@@ -455,25 +457,29 @@ class OpenWebIfDevice:
         :return: a dict
         """
         sources: dict[str, Any] = {}
+        bRef = ""
+
+        if not self.bouquet_list:
+            self.bouquet_list = OrderedDict(
+                {b[1]: b[0] for b in (await self.get_all_bouquets())["bouquets"]}
+            )
 
         if not bouquet:
             # load first bouquet
-            all_bouquets = await self.get_all_bouquets()
-            if not all_bouquets:
-                _LOGGER.debug("%s get_all_bouquets: No bouquets were found.", self.base)
+            if len(self.bouquet_list) == 0:
+                _LOGGER.debug("%s: No bouquets were found.", self.base)
+                return sources
+            bRef = next(iter(self.bouquet_list.values()))
+
+        elif not bouquet.startswith("1:7:1:0:0:0:0:0:0:0"):
+            # Not a bouquet reference -> get bref from name
+
+            bRef = self.bouquet_list.get(bouquet)
+            if not bRef:
+                _LOGGER.error('Specified bouquet "%s" could not be found', bouquet)
                 return sources
 
-            if "bouquets" in all_bouquets:
-                bouquet = str(all_bouquets["bouquets"][0][0])
-                first_bouquet_name = all_bouquets["bouquets"][0][1]
-                _LOGGER.debug(
-                    "%s First bouquet name is: '%s'", self.base, first_bouquet_name
-                )
-            else:
-                _LOGGER.debug("bouquets not in all_bouquets.")
-                return sources
-
-        result = await self._call_api(PATH_EPGNOW, {"bRef": bouquet})
+        result = await self._call_api(PATH_EPGNOW, {"bRef": bRef})
 
         if result:
             sources = {src["sname"]: src["sref"] for src in result["events"]}
