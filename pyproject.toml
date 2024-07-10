@@ -32,33 +32,7 @@ dynamic = ["version"]
 [tool.setuptools.dynamic]
 version = {attr = "openwebif.__version__"}
 
-[tool.flake8]
-exclude = ["docs"]
-
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-envlist = black, ruff
-
-[testenv:black]
-basepython = python
-deps = black
-commands = black openwebif
-
-[testenv:pylint]
-basepython = python
-deps = pylint
-
-commands = pylint openwebif
-
-[testenv]
-setenv =
-    PYTHONPATH = {toxinidir}
-
-commands = pytest
-"""
-
-[tool.ruff]
+[tool.ruff.lint]
 select = [
     "B002", # Python does not support the unary prefix increment
     "B007", # Loop control variable {name} not used within loop body
@@ -162,7 +136,7 @@ disallow_untyped_decorators = true
 disallow_untyped_defs = true
 warn_return_any = true
 warn_unreachable = true
-python_version = 3.11
+python_version = "3.12"
 plugins = "pydantic.mypy"
 show_error_codes = true
 local_partial_types = true
