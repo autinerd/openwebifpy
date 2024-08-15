@@ -484,7 +484,7 @@ class OpenWebIfDevice:
         result = await self._call_api(PATH_EPGNOW, {"bRef": bRef})
 
         if result:
-            sources = {src["sname"]: src["sref"] for src in result["events"]}
+            sources = {src["sname"]: src["sref"] for src in result["events"]} if len(result["events"]) > 0 else {}
         else:
             _LOGGER.warning("No sources could be loaded from specified bouquet.")
         return sources
