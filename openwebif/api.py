@@ -1,5 +1,7 @@
 """API for communicating with OpenWebIf."""
 
+from __future__ import annotations
+
 import logging
 import unicodedata
 from dataclasses import dataclass
@@ -102,7 +104,7 @@ class OpenWebIfDevice:
         is_https: bool = False,
         turn_off_to_deep: bool = False,
         source_bouquet: str | None = None,
-    ):
+    ) -> None:
         """Define an enigma2 device.
 
         :param host: IP or hostname or a ClientSession
@@ -161,32 +163,32 @@ class OpenWebIfDevice:
             return
 
         self.status.currservice.filename = self.status.status_info.get(
-            "currservice_filename"
+            "currservice_filename",
         )
         self.status.currservice.id = self.status.status_info.get("currservice_id")
         self.status.currservice.name = self.status.status_info.get("currservice_name")
         self.status.currservice.serviceref = self.status.status_info.get(
-            "currservice_serviceref"
+            "currservice_serviceref",
         )
         self.status.currservice.begin = self.status.status_info.get("currservice_begin")
         self.status.currservice.begin_timestamp = self.status.status_info.get(
-            "currservice_begin_timestamp"
+            "currservice_begin_timestamp",
         )
 
         self.status.currservice.end = self.status.status_info.get("currservice_end")
 
         self.status.currservice.end_timestamp = self.status.status_info.get(
-            "currservice_end_timestamp"
+            "currservice_end_timestamp",
         )
 
         self.status.currservice.description = self.status.status_info.get(
-            "currservice_description"
+            "currservice_description",
         )
         self.status.currservice.station = self.status.status_info.get(
-            "currservice_station"
+            "currservice_station",
         )
         self.status.currservice.fulldescription = self.status.status_info.get(
-            "currservice_fulldescription"
+            "currservice_fulldescription",
         )
         self.status.in_standby = self.status.status_info["inStandby"] == "true"
         self.status.is_recording = self.status.status_info["isRecording"] == "true"
@@ -232,13 +234,16 @@ class OpenWebIfDevice:
                 {
                     "set": ("set" + str(new_volume))
                     if isinstance(new_volume, int)
-                    else str(new_volume)
+                    else str(new_volume),
                 },
-            )
+            ),
         )
 
     async def send_message(
-        self, text: str, message_type: MessageType = MessageType.INFO, timeout: int = -1
+        self,
+        text: str,
+        message_type: MessageType = MessageType.INFO,
+        timeout: int = -1,
     ) -> bool:
         """Send a message to the TV screen.
 
@@ -251,7 +256,7 @@ class OpenWebIfDevice:
             await self._call_api(
                 PATH_MESSAGE,
                 {"timeout": timeout, "type": message_type.value, "text": text},
-            )
+            ),
         )
 
     async def turn_on(self) -> bool:
@@ -262,7 +267,7 @@ class OpenWebIfDevice:
             # self.wake_up()
 
         return self._check_response_result(
-            await self._call_api(PATH_POWERSTATE, {"newstate": PowerState.WAKEUP})
+            await self._call_api(PATH_POWERSTATE, {"newstate": PowerState.WAKEUP}),
         )
 
     def get_screen_grab_url(
@@ -284,7 +289,7 @@ class OpenWebIfDevice:
                 "format": file_format.value,
                 "t": int(time()),
                 "r": resolution,
-            }
+            },
         )
 
     async def turn_off(self) -> bool:
@@ -293,28 +298,30 @@ class OpenWebIfDevice:
             return await self.deep_standby()
 
         return self._check_response_result(
-            await self._call_api(PATH_POWERSTATE, {"newstate": PowerState.STANDBY})
+            await self._call_api(PATH_POWERSTATE, {"newstate": PowerState.STANDBY}),
         )
 
     async def deep_standby(self) -> bool:
         """Go into deep standby."""
 
         return self._check_response_result(
-            await self._call_api(PATH_POWERSTATE, {"newstate": PowerState.DEEP_STANDBY})
+            await self._call_api(
+                PATH_POWERSTATE, {"newstate": PowerState.DEEP_STANDBY}
+            ),
         )
 
     async def set_powerstate(self, newstate: PowerState) -> bool:
         """Set a new power state."""
 
         return self._check_response_result(
-            await self._call_api(PATH_POWERSTATE, {"newstate": newstate.value})
+            await self._call_api(PATH_POWERSTATE, {"newstate": newstate.value}),
         )
 
     async def send_remote_control_action(self, action: RemoteControlCodes) -> bool:
         """Send a remote control command."""
 
         return self._check_response_result(
-            await self._call_api(PATH_REMOTECONTROL, {"command": action.value})
+            await self._call_api(PATH_REMOTECONTROL, {"command": action.value}),
         )
 
     async def toggle_mute(self) -> bool:
@@ -350,7 +357,9 @@ class OpenWebIfDevice:
         return None
 
     async def get_current_playing_picon_url(
-        self, channel_name: str | None = None, currservice_serviceref: str | None = None
+        self,
+        channel_name: str | None = None,
+        currservice_serviceref: str | None = None,
     ) -> str | None:
         """Return the URL to the picon image for the currently playing channel.
 
@@ -463,7 +472,7 @@ class OpenWebIfDevice:
 
         if not self.bouquet_list:
             self.bouquet_list = OrderedDict(
-                {b[1]: b[0] for b in (await self.get_all_bouquets())["bouquets"]}
+                {b[1]: b[0] for b in (await self.get_all_bouquets())["bouquets"]},
             )
 
         if not bouquet:
@@ -508,11 +517,13 @@ class OpenWebIfDevice:
         """
 
         return self._check_response_result(
-            await self._call_api(PATH_ZAP, {"sRef": source})
+            await self._call_api(PATH_ZAP, {"sRef": source}),
         )
 
     async def _call_api(
-        self, path: str, params: Mapping[str, str | int | bool] | None = None
+        self,
+        path: str,
+        params: Mapping[str, str | int | bool] | None = None,
     ) -> dict[str, Any]:
         """Perform one api request operation."""
         if self._session is None:
