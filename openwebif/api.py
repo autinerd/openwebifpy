@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import logging
 import unicodedata
+from collections import OrderedDict
 from dataclasses import dataclass
 from re import sub
 from time import time
-from typing import Any, Mapping, OrderedDict, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import aiohttp
 from yarl import URL
@@ -35,6 +36,9 @@ from .enums import (
     SetVolumeOption,
 )
 from .error import InvalidAuthError
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,12 +93,11 @@ class OpenWebIfDevice:
     turn_off_to_deep: bool
     picon_url: str | None = None
     source_bouquet: str | None = None
-    mac_address: str
+    mac_address: str | None = None
     sources: dict[str, Any]
     source_list: list[str]
     bouquet_list: OrderedDict[str, str]  # {bouquetname: bouquetref}
 
-    # pylint: disable=too-many-arguments, disable=too-many-instance-attributes
     def __init__(
         self,
         host: str | aiohttp.ClientSession,
@@ -127,13 +130,14 @@ class OpenWebIfDevice:
                 password=password,
             )
             self._session = aiohttp.ClientSession(self.base)
-        elif isinstance(host, aiohttp.ClientSession):
-            self.base = cast(URL, host._base_url)
+        else:
+            self.base = cast(URL, host._base_url)  # noqa: SLF001
             self._session = host
         self.turn_off_to_deep = turn_off_to_deep
         self.source_bouquet = source_bouquet
         self.status = OpenWebIfStatus(currservice=OpenWebIfServiceEvent())
         self.sources = {}
+        self.source_list = []
         self.bouquet_list = OrderedDict()
 
     async def close(self) -> None:
@@ -306,7 +310,8 @@ class OpenWebIfDevice:
 
         return self._check_response_result(
             await self._call_api(
-                PATH_POWERSTATE, {"newstate": PowerState.DEEP_STANDBY}
+                PATH_POWERSTATE,
+                {"newstate": PowerState.DEEP_STANDBY},
             ),
         )
 
@@ -395,20 +400,16 @@ class OpenWebIfDevice:
             return url
 
         _LOGGER.debug("Could not find picon for: %s", channel_name)
-
-        # stop here. Some boxes freeze when attempting screen grabs so often.
-        # See https://github.com/fbradyirl/openwebifpy/issues/14
         return None
 
     def get_channel_name_from_serviceref(self) -> str | None:
         """Try to get the channel name from the recording file name."""
-        try:
-            if self.status.currservice.serviceref is None:
-                return None
-            return self.status.currservice.serviceref.split("-")[1].strip()
-        # pylint: disable=broad-except
-        except Exception:
-            _LOGGER.debug("cannot determine channel name from recording")
+        if self.status.currservice.serviceref is None:
+            return None
+        if len(splits := self.status.currservice.serviceref.split("-")) >= 2:
+            # We guess the channel name based on the default recording name scheme
+            # Example file name: "20201019 2027 - SBS6 HD - Chateau Meiland"
+            return splits[1].strip()
         return self.status.currservice.serviceref
 
     async def url_exists(self, url: str) -> bool:
