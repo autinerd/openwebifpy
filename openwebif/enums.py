@@ -65,3 +65,10 @@ class SetVolumeOption(StrEnum):
     UP = "up"
     DOWN = "down"
     MUTE = "mute"
+
+
+class SType(StrEnum):
+    """Enum for service type."""
+
+    TV = "tv"
+    RADIO = "radio"
