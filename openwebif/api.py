@@ -41,6 +41,8 @@ from .error import InvalidAuthError
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from openwebif.types import Bouquets
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -508,15 +510,17 @@ class OpenWebIfDevice:
         """Get list of all services."""
         return await self._call_api(PATH_GETALLSERVICES)
 
-    async def get_bouquets(self, stype: SType = SType.TV) -> dict[str, Any]:
+    async def get_bouquets(self, stype: SType = SType.TV) -> Bouquets:
         """Get list of bouquets."""
         return await self._call_api(PATH_BOUQUETS, {"stype": str(stype)})
 
-    async def get_all_bouquets(self) -> dict[str, Any]:
+    async def get_all_bouquets(self) -> Bouquets:
         """Get list of all tv and radio bouquets."""
         return {
-            **(await self.get_bouquets(SType.TV)),
-            **(await self.get_bouquets(SType.RADIO)),
+            "bouquets": [
+                *((await self.get_bouquets(SType.TV))["bouquets"]),
+                *((await self.get_bouquets(SType.RADIO))["bouquets"]),
+            ],
         }
 
     async def zap(self, source: str) -> bool:
