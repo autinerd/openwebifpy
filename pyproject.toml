@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27.0"]
 build-backend = "hatchling.build"
 
 [project]
@@ -17,11 +17,10 @@ maintainers = [
 classifiers = [
     'Development Status :: 2 - Pre-Alpha',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: MIT License',
     'Natural Language :: English',
     'Programming Language :: Python :: 3 :: Only',
 ]
-license = {text = "MIT License"}
+license = "MIT"
 keywords=['openwebif']
 
 dependencies = ["aiohttp", "yarl"]
